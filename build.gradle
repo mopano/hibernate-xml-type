@@ -1,0 +1,84 @@
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+ext {
+	expectedGradleVersion = '3.2.1'
+}
+
+group = 'com.mopano'
+version = '1.0'
+
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+tasks.withType(JavaCompile) {
+	if (project.hasProperty('JAVA7_HOME')) {
+        options.bootClasspath = "$JAVA7_HOME/jre/lib/rt.jar"
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+	compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.1.0.Final'
+	testCompile group: 'junit', name: 'junit', version: '4.10'
+	testRuntime group: 'org.postgresql', name: 'postgresql', version: '9.4.1212.jre7'
+	testCompile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.5'
+	testCompile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.5'
+}
+
+jar {
+	manifest = null
+}
+
+task compile
+compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
+
+
+task sourcesJar(type: Jar, dependsOn: compileJava) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact source: sourcesJar, classifier: 'src', extension: 'zip'
+
+            // Maven publish plugin adds ALL dependencies with 'runtime' scope
+            // see https://github.com/gradle/gradle/blob/b004f39ece183176bf77c1eebc4aa5cbc20ca5cc/subprojects/maven/src/main/java/org/gradle/api/publish/maven/tasks/GenerateMavenPom.java#L104
+            pom.withXml {
+                asNode().children().each { projnode ->
+                    if (projnode.name().getLocalPart().equals('dependencies')) {
+                        projnode.children().each { depnode ->
+                            if (depnode.name().getLocalPart().equals('dependency')) {
+                                Node scopechild = null;
+                                depnode.children().each { depchild ->
+                                    if (depchild.name().getLocalPart().equals('scope')) {
+                                        depchild.setValue('compile')
+                                        scopechild = depchild
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+model {
+    tasks.generatePomFileForMavenJavaPublication {
+        destination = file( "$project.buildDir/generated-pom.xml" )
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = expectedGradleVersion
+}
