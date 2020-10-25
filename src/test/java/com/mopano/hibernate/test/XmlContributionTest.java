@@ -1,7 +1,9 @@
 /*
- * Copyright (c) Mak Ltd. Varna, Bulgaria
- * All rights reserved.
+ * Copyright (c) Mak-Si Management Ltd. Varna, Bulgaria
  *
+ * License: BSD 3-Clause license.
+ * See the LICENSE.md file in the root directory or <https://opensource.org/licenses/BSD-3-Clause>.
+ * See also <https://tldrlegal.com/license/bsd-3-clause-license-(revised)>.
  */
 package com.mopano.hibernate.test;
 
@@ -34,7 +36,6 @@ public class XmlContributionTest {
 
 	private static EntityManagerFactory emf;
 	private static DocumentBuilderFactory XMLFactory;
-	private static TransformerFactory XMLtransformerFactory;
 	private static final String documentString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 			+ "<Request Date=\"21122016\" Mode=\"Test\" Time=\"101011\">"
 			+ "<Avl ServiceType=\"T\">"
@@ -61,7 +62,6 @@ public class XmlContributionTest {
 	public static void setupJPA() {
 		emf = Persistence.createEntityManagerFactory("com.mopano.hibernate");
 		XMLFactory = DocumentBuilderFactory.newInstance();
-		XMLtransformerFactory = TransformerFactory.newInstance();
 		XMLFactory.setNamespaceAware(true);
 		XMLFactory.setValidating(false);
 	}
